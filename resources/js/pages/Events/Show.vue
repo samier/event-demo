@@ -26,7 +26,11 @@ import type {
     RegistrationResult,
 } from '@/types/events';
 
-const props = defineProps<{ event: EventResource; attendees: Attendee[] }>();
+const props = defineProps<{
+    event: EventResource;
+    attendees: Attendee[];
+    backUrl: string;
+}>();
 
 const attendees = ref<Attendee[]>([...props.attendees]);
 const attendeesCount = ref(props.event.attendees_count);
@@ -77,9 +81,9 @@ const statusVariant = computed(() => {
 <template>
     <Head :title="event.name" />
 
-    <div class="mx-auto w-full max-w-5xl space-y-6 p-4 md:p-6">
+    <div class="w-full space-y-6 p-4 md:p-6">
         <Link
-            href="/events-visual-1"
+            :href="backUrl"
             class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
             <ArrowLeft class="size-4" /> Back to events

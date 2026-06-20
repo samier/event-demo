@@ -14,7 +14,12 @@ import {
 } from '@/lib/eventFormat';
 import type { EventResource } from '@/types/events';
 
-const props = defineProps<{ event: EventResource }>();
+const props = defineProps<{ event: EventResource; from?: string }>();
+
+const eventUrl = computed(
+    () =>
+        `/events/${props.event.id}${props.from ? `?from=${props.from}` : ''}`,
+);
 
 const attendees = ref(props.event.attendees_count);
 
@@ -37,7 +42,7 @@ const statusVariant = computed(() => {
         class="group flex flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5"
     >
         <Link
-            :href="`/events/${event.id}`"
+            :href="eventUrl"
             class="relative block aspect-[16/10] overflow-hidden"
         >
             <EventImageCarousel :images="event.images" :alt="event.name" />
@@ -63,7 +68,7 @@ const statusVariant = computed(() => {
 
         <div class="flex flex-1 flex-col gap-3 p-4">
             <div class="space-y-1">
-                <Link :href="`/events/${event.id}`">
+                <Link :href="eventUrl">
                     <h3
                         class="line-clamp-1 leading-tight font-semibold transition-colors group-hover:text-primary"
                     >
@@ -106,7 +111,7 @@ const statusVariant = computed(() => {
                     <Button class="w-full" size="sm">Register interest</Button>
                 </RegisterInterestDialog>
                 <Button as-child variant="outline" size="sm">
-                    <Link :href="`/events/${event.id}`">Details</Link>
+                    <Link :href="eventUrl">Details</Link>
                 </Button>
             </div>
         </div>

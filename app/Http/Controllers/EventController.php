@@ -49,7 +49,7 @@ class EventController extends Controller
         return EventResource::collection($events)->response();
     }
 
-    public function show(Event $event): Response
+    public function show(Request $request, Event $event): Response
     {
         $event->loadCount('attendees')
             ->load(['user', 'attendees' => fn ($q) => $q->latest()->limit(100)]);
@@ -57,7 +57,16 @@ class EventController extends Controller
         return Inertia::render('Events/Show', [
             'event' => (new EventResource($event))->resolve(),
             'attendees' => AttendeeResource::collection($event->attendees)->resolve(),
+            'backUrl' => $this->backUrlFor($request->query('from')),
         ]);
+    }
+
+    private function backUrlFor(?string $from): string
+    {
+        return match ($from) {
+            'visual2', 'events-visual-2' => route('events.visual2'),
+            default => route('events.visual1'),
+        };
     }
 
     /**

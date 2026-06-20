@@ -110,5 +110,16 @@ it('renders the event detail page with enriched data', function () {
             ->where('event.id', $event->id)
             ->where('event.name', 'Global Tech Summit')
             ->where('event.location.city', 'London')
+            ->where('backUrl', route('events.visual1'))
+        );
+});
+
+it('returns to the agenda when opened from visual two', function () {
+    $event = makeEvent();
+
+    $this->get(route('events.show', ['event' => $event, 'from' => 'visual2']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('backUrl', route('events.visual2'))
         );
 });

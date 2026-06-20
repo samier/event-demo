@@ -47,7 +47,7 @@ onBeforeUnmount(() => observer?.disconnect());
 <template>
     <Head title="Discover Events" />
 
-    <div class="mx-auto w-full max-w-7xl space-y-6 p-4 md:p-6">
+    <div class="w-full space-y-6 p-4 md:p-6">
         <!-- Hero -->
         <header
             class="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/10 via-card to-card p-6 md:p-10"
@@ -89,6 +89,7 @@ onBeforeUnmount(() => observer?.disconnect());
                 v-for="(event, i) in events"
                 :key="event.id"
                 :event="event"
+                from="visual1"
                 class="animate-in duration-500 fade-in-0 fill-mode-both slide-in-from-bottom-4"
                 :style="{ animationDelay: `${Math.min(i % 24, 11) * 40}ms` }"
             />

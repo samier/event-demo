@@ -139,57 +139,51 @@ onBeforeUnmount(() => observer?.disconnect());
 <template>
     <Head title="Events Agenda" />
 
-    <div
-        class="relative min-h-full overflow-hidden bg-slate-950 text-slate-100"
-    >
-        <!-- Ambient background -->
-        <div class="pointer-events-none absolute inset-0 overflow-hidden">
+    <div class="w-full space-y-8 p-4 md:p-8">
+        <!-- Header -->
+        <header
+            class="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/10 via-card to-card p-6 md:p-10"
+        >
             <div
-                class="absolute -top-40 left-1/4 size-[32rem] rounded-full bg-indigo-600/20 blur-[130px]"
+                class="absolute -top-16 -right-16 size-64 rounded-full bg-primary/10 blur-3xl"
             />
-            <div
-                class="absolute top-1/3 -right-20 size-[28rem] rounded-full bg-fuchsia-600/10 blur-[130px]"
-            />
-        </div>
-
-        <div class="relative mx-auto w-full max-w-6xl space-y-8 p-4 md:p-8">
-            <!-- Header -->
-            <header class="space-y-2">
+            <div class="relative space-y-2">
                 <span
-                    class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium tracking-wide text-indigo-300 uppercase"
+                    class="inline-flex items-center gap-2 rounded-full border bg-background/80 px-3 py-1 text-xs font-medium tracking-wide text-primary uppercase"
                 >
                     <CalendarRange class="size-3.5" /> Agenda
                 </span>
                 <h1 class="text-3xl font-bold tracking-tight md:text-4xl">
                     What's coming up
                 </h1>
-                <p class="max-w-xl text-slate-400">
+                <p class="max-w-xl text-muted-foreground">
                     A chronological run of events. Filter by date and city to
                     plan your calendar.
                 </p>
-            </header>
+            </div>
+        </header>
 
-            <!-- Filter panel (prominent + labelled) -->
-            <div
-                class="rounded-2xl border border-white/10 bg-white/[0.04] p-4 shadow-xl shadow-black/20 backdrop-blur-xl md:p-5"
-            >
+        <!-- Filter panel -->
+        <div
+            class="rounded-2xl border bg-card/60 p-4 shadow-sm backdrop-blur md:p-5"
+        >
                 <div class="grid gap-4 md:grid-cols-12">
                     <!-- Search -->
                     <div class="flex flex-col gap-1.5 md:col-span-5">
                         <label
                             for="agenda-search"
-                            class="text-xs font-medium text-slate-400"
+                            class="text-xs font-medium text-muted-foreground"
                             >Search</label
                         >
                         <div class="relative">
                             <Search
-                                class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-500"
+                                class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
                             />
                             <input
                                 id="agenda-search"
                                 v-model="filters.q"
                                 placeholder="Search by event name…"
-                                class="h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 pr-3 pl-9 text-sm text-slate-100 placeholder:text-slate-500 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
+                                class="h-10 w-full rounded-xl border border-input bg-background pr-3 pl-9 text-sm placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/30 focus:outline-none"
                             />
                         </div>
                     </div>
@@ -198,13 +192,13 @@ onBeforeUnmount(() => observer?.disconnect());
                     <div class="flex flex-col gap-1.5 md:col-span-4">
                         <label
                             for="agenda-city"
-                            class="text-xs font-medium text-slate-400"
+                            class="text-xs font-medium text-muted-foreground"
                             >Location</label
                         >
                         <select
                             id="agenda-city"
                             v-model="filters.city"
-                            class="h-10 rounded-xl border border-white/10 bg-slate-950/60 px-3 text-sm text-slate-100 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
+                            class="h-10 rounded-xl border border-input bg-background px-3 text-sm focus:border-ring focus:ring-2 focus:ring-ring/30 focus:outline-none"
                             @change="applyFilters"
                         >
                             <option value="">Anywhere in the world</option>
@@ -220,11 +214,11 @@ onBeforeUnmount(() => observer?.disconnect());
 
                     <!-- When -->
                     <div class="flex flex-col gap-1.5 md:col-span-3">
-                        <span class="text-xs font-medium text-slate-400"
+                        <span class="text-xs font-medium text-muted-foreground"
                             >Timeframe</span
                         >
                         <div
-                            class="inline-flex h-10 rounded-xl border border-white/10 bg-slate-950/60 p-1"
+                            class="inline-flex h-10 rounded-xl border bg-background p-1"
                         >
                             <button
                                 v-for="opt in whenOptions"
@@ -233,8 +227,8 @@ onBeforeUnmount(() => observer?.disconnect());
                                 class="flex-1 rounded-lg px-2 text-sm font-medium transition-colors"
                                 :class="
                                     filters.when === opt.value
-                                        ? 'bg-indigo-500 text-white shadow'
-                                        : 'text-slate-400 hover:text-slate-100'
+                                        ? 'bg-primary text-primary-foreground shadow'
+                                        : 'text-muted-foreground hover:text-foreground'
                                 "
                                 @click="setWhen(opt.value)"
                             >
@@ -247,35 +241,35 @@ onBeforeUnmount(() => observer?.disconnect());
                     <div class="flex flex-col gap-1.5 md:col-span-4">
                         <label
                             for="agenda-from"
-                            class="text-xs font-medium text-slate-400"
+                            class="text-xs font-medium text-muted-foreground"
                             >From date</label
                         >
                         <input
                             id="agenda-from"
                             v-model="filters.from"
                             type="date"
-                            class="h-10 rounded-xl border border-white/10 bg-slate-950/60 px-3 text-sm text-slate-100 [color-scheme:dark] focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
+                            class="h-10 rounded-xl border border-input bg-background px-3 text-sm focus:border-ring focus:ring-2 focus:ring-ring/30 focus:outline-none"
                             @change="applyFilters"
                         />
                     </div>
                     <div class="flex flex-col gap-1.5 md:col-span-4">
                         <label
                             for="agenda-to"
-                            class="text-xs font-medium text-slate-400"
+                            class="text-xs font-medium text-muted-foreground"
                             >To date</label
                         >
                         <input
                             id="agenda-to"
                             v-model="filters.to"
                             type="date"
-                            class="h-10 rounded-xl border border-white/10 bg-slate-950/60 px-3 text-sm text-slate-100 [color-scheme:dark] focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
+                            class="h-10 rounded-xl border border-input bg-background px-3 text-sm focus:border-ring focus:ring-2 focus:ring-ring/30 focus:outline-none"
                             @change="applyFilters"
                         />
                     </div>
 
                     <!-- Category -->
                     <div class="flex flex-col gap-1.5 md:col-span-4">
-                        <span class="text-xs font-medium text-slate-400"
+                        <span class="text-xs font-medium text-muted-foreground"
                             >Category</span
                         >
                         <div class="flex flex-wrap gap-1.5">
@@ -286,8 +280,8 @@ onBeforeUnmount(() => observer?.disconnect());
                                 class="rounded-full border px-2.5 py-1 text-xs font-medium capitalize transition-colors"
                                 :class="
                                     filters.type === cat
-                                        ? 'border-indigo-400 bg-indigo-500 text-white'
-                                        : 'border-white/10 text-slate-400 hover:border-white/30 hover:text-slate-200'
+                                        ? 'border-primary bg-primary text-primary-foreground'
+                                        : 'hover:border-primary/50 hover:bg-accent'
                                 "
                                 @click="toggleCategory(cat)"
                             >
@@ -299,10 +293,10 @@ onBeforeUnmount(() => observer?.disconnect());
 
                 <!-- Result summary + clear -->
                 <div
-                    class="mt-4 flex items-center justify-between border-t border-white/10 pt-3 text-sm"
+                    class="mt-4 flex items-center justify-between border-t pt-3 text-sm"
                 >
-                    <p class="text-slate-400">
-                        <span class="font-semibold text-slate-200">{{
+                    <p class="text-muted-foreground">
+                        <span class="font-semibold text-foreground">{{
                             (meta?.total ?? 0).toLocaleString()
                         }}</span>
                         {{ (meta?.total ?? 0) === 1 ? 'event' : 'events' }}
@@ -311,7 +305,7 @@ onBeforeUnmount(() => observer?.disconnect());
                     <button
                         v-if="activeFilterCount > 0"
                         type="button"
-                        class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-slate-400 transition-colors hover:bg-white/5 hover:text-slate-100"
+                        class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                         @click="resetFilters"
                     >
                         <RotateCcw class="size-3.5" /> Clear
@@ -325,8 +319,8 @@ onBeforeUnmount(() => observer?.disconnect());
             <!-- Spotlight -->
             <Link
                 v-if="featured"
-                :href="`/events/${featured.id}`"
-                class="group relative block overflow-hidden rounded-3xl border border-white/10 shadow-2xl shadow-black/40"
+                :href="`/events/${featured.id}?from=visual2`"
+                class="group relative block overflow-hidden rounded-3xl border shadow-lg"
             >
                 <div class="aspect-[2/1] w-full sm:aspect-[21/8]">
                     <EventImageCarousel
@@ -335,11 +329,11 @@ onBeforeUnmount(() => observer?.disconnect());
                     />
                 </div>
                 <div
-                    class="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent"
+                    class="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent"
                 />
                 <div class="absolute inset-x-0 bottom-0 space-y-2.5 p-5 md:p-8">
                     <span
-                        class="inline-flex items-center gap-1.5 rounded-full bg-indigo-500 px-3 py-1 text-xs font-semibold text-white shadow-lg"
+                        class="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground shadow-lg"
                     >
                         <Ticket class="size-3.5" /> Next up ·
                         {{ relativeTime(featured.time.starts_at_utc) }}
@@ -348,22 +342,22 @@ onBeforeUnmount(() => observer?.disconnect());
                         {{ featured.name }}
                     </h2>
                     <div
-                        class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-slate-200"
+                        class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-muted-foreground"
                     >
                         <span class="inline-flex items-center gap-1.5"
-                            ><CalendarClock class="size-4 text-indigo-300" />
+                            ><CalendarClock class="size-4 text-primary" />
                             {{ venueTime(featured) }}</span
                         >
                         <span class="inline-flex items-center gap-1.5"
-                            ><MapPin class="size-4 text-indigo-300" />
+                            ><MapPin class="size-4 text-primary" />
                             {{ featured.location.label }}</span
                         >
                         <span class="inline-flex items-center gap-1.5"
-                            ><Users class="size-4 text-indigo-300" />
+                            ><Users class="size-4 text-primary" />
                             {{ featured.attendees_count }} going</span
                         >
                         <span
-                            class="ml-auto text-base font-semibold text-white"
+                            class="ml-auto text-base font-semibold text-foreground"
                             >{{ formatPrice(featured) }}</span
                         >
                     </div>
@@ -374,7 +368,7 @@ onBeforeUnmount(() => observer?.disconnect());
             <div v-if="groups.length > 0" class="relative">
                 <!-- Continuous rail -->
                 <span
-                    class="pointer-events-none absolute top-2 bottom-2 left-5 w-px bg-gradient-to-b from-indigo-500/50 via-white/10 to-transparent"
+                    class="pointer-events-none absolute top-2 bottom-2 left-5 w-px bg-gradient-to-b from-primary/50 via-border to-transparent"
                 />
 
                 <div class="space-y-10">
@@ -385,11 +379,11 @@ onBeforeUnmount(() => observer?.disconnect());
                     >
                         <!-- Date node -->
                         <div
-                            class="absolute top-0 left-0 z-10 grid size-10 place-items-center rounded-2xl border border-white/10 bg-slate-900 text-center shadow-lg"
+                            class="absolute top-0 left-0 z-10 grid size-10 place-items-center rounded-2xl border bg-card text-center shadow-sm"
                         >
                             <div class="leading-none">
                                 <div
-                                    class="text-[9px] font-semibold tracking-wide text-indigo-400 uppercase"
+                                    class="text-[9px] font-semibold tracking-wide text-primary uppercase"
                                 >
                                     {{ venueDateParts(group.items[0]).month }}
                                 </div>
@@ -399,10 +393,10 @@ onBeforeUnmount(() => observer?.disconnect());
                             </div>
                         </div>
 
-                        <h3 class="pt-1.5 text-sm font-semibold text-slate-300">
+                        <h3 class="pt-1.5 text-sm font-semibold">
                             {{ formatDayHeading(group.date) }}
                         </h3>
-                        <p class="text-xs text-slate-500">
+                        <p class="text-xs text-muted-foreground">
                             {{ group.items.length }} event{{
                                 group.items.length === 1 ? '' : 's'
                             }}
@@ -412,10 +406,10 @@ onBeforeUnmount(() => observer?.disconnect());
                             <div
                                 v-for="event in group.items"
                                 :key="event.id"
-                                class="group flex animate-in flex-col gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-3 transition-all duration-300 fade-in-0 fill-mode-both slide-in-from-left-2 hover:-translate-y-0.5 hover:border-indigo-400/40 hover:bg-white/[0.06] hover:shadow-lg hover:shadow-indigo-500/5 sm:flex-row"
+                                class="group flex animate-in flex-col gap-4 rounded-2xl border bg-card p-3 transition-all duration-300 fade-in-0 fill-mode-both slide-in-from-left-2 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md sm:flex-row"
                             >
                                 <Link
-                                    :href="`/events/${event.id}`"
+                                    :href="`/events/${event.id}?from=visual2`"
                                     class="h-36 w-full shrink-0 overflow-hidden rounded-xl sm:h-24 sm:w-32"
                                 >
                                     <EventImageCarousel
@@ -429,25 +423,25 @@ onBeforeUnmount(() => observer?.disconnect());
                                 >
                                     <div class="flex items-center gap-2">
                                         <span
-                                            class="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium tracking-wide text-slate-200 capitalize"
+                                            class="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium tracking-wide capitalize"
                                             >{{ event.type }}</span
                                         >
                                         <span
                                             v-if="event.status !== 'published'"
-                                            class="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-medium text-amber-300 capitalize"
+                                            class="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-medium text-amber-700 capitalize dark:text-amber-300"
                                         >
                                             {{ statusLabel(event.status) }}
                                         </span>
                                     </div>
-                                    <Link :href="`/events/${event.id}`">
+                                    <Link :href="`/events/${event.id}?from=visual2`">
                                         <h4
-                                            class="truncate font-semibold transition-colors group-hover:text-indigo-300"
+                                            class="truncate font-semibold transition-colors group-hover:text-primary"
                                         >
                                             {{ event.name }}
                                         </h4>
                                     </Link>
                                     <div
-                                        class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400"
+                                        class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground"
                                     >
                                         <span
                                             class="inline-flex items-center gap-1.5"
@@ -472,16 +466,14 @@ onBeforeUnmount(() => observer?.disconnect());
                                     </div>
 
                                     <div
-                                        class="mt-2 flex items-center justify-between gap-3 border-t border-white/5 pt-2 sm:mt-auto"
+                                        class="mt-2 flex items-center justify-between gap-3 border-t pt-2 sm:mt-auto"
                                     >
                                         <span
-                                            class="text-sm font-semibold text-white"
+                                            class="text-sm font-semibold"
                                             >{{ formatPrice(event) }}</span
                                         >
                                         <RegisterInterestDialog :event="event">
-                                            <Button
-                                                size="sm"
-                                                class="bg-indigo-500 text-white hover:bg-indigo-400"
+                                            <Button size="sm"
                                                 >Register interest</Button
                                             >
                                         </RegisterInterestDialog>
@@ -498,24 +490,24 @@ onBeforeUnmount(() => observer?.disconnect());
                 <div
                     v-for="n in 4"
                     :key="`sk-${n}`"
-                    class="h-28 animate-pulse rounded-2xl border border-white/10 bg-white/[0.03]"
+                    class="h-28 animate-pulse rounded-2xl border bg-muted"
                 />
             </div>
 
             <!-- Empty -->
             <div
                 v-if="loaded && !loading && events.length === 0"
-                class="rounded-2xl border border-dashed border-white/15 py-16 text-center"
+                class="rounded-2xl border border-dashed py-16 text-center"
             >
-                <CalendarRange class="mx-auto size-10 text-slate-600" />
+                <CalendarRange class="mx-auto size-10 text-muted-foreground" />
                 <p class="mt-3 font-medium">Nothing on the agenda</p>
-                <p class="mt-1 text-sm text-slate-500">
+                <p class="mt-1 text-sm text-muted-foreground">
                     Try a different date range or city.
                 </p>
                 <Button
                     variant="outline"
                     size="sm"
-                    class="mt-4 border-white/15 bg-transparent text-slate-200 hover:bg-white/5"
+                    class="mt-4"
                     @click="resetFilters"
                 >
                     Clear filters
@@ -525,10 +517,9 @@ onBeforeUnmount(() => observer?.disconnect());
             <div ref="sentinel" class="h-4" />
             <p
                 v-if="loaded && !hasMore() && events.length > 0"
-                class="pb-6 text-center text-sm text-slate-500"
+                class="pb-6 text-center text-sm text-muted-foreground"
             >
                 End of the agenda · {{ meta?.total?.toLocaleString() }} events
             </p>
-        </div>
     </div>
 </template>

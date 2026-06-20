@@ -18,6 +18,9 @@ class EventSeeder extends Seeder
 
     private const CHUNK = 4000;
 
+    /** Smaller batches for MySQL — large payloads exceed max_allowed_packet. */
+    private const MYSQL_CHUNK = 250;
+
     /** Event categories (stored in the `type` column). */
     private const TYPES = ['concert', 'conference', 'meetup', 'workshop', 'festival', 'sports', 'networking', 'exhibition'];
 
@@ -108,7 +111,7 @@ class EventSeeder extends Seeder
         $done = 0;
 
         while ($remaining > 0) {
-            $batchSize = min(self::CHUNK, $remaining);
+            $batchSize = min($this->chunkSize(), $remaining);
             $batch = [];
 
             for ($i = 0; $i < $batchSize; $i++) {
@@ -296,22 +299,36 @@ class EventSeeder extends Seeder
     private function withSeedingPragmas(callable $callback): void
     {
         $driver = DB::connection()->getDriverName();
-        if ($driver !== 'sqlite') {
-            $callback();
+
+        if ($driver === 'sqlite') {
+            DB::statement('PRAGMA journal_mode = MEMORY');
+            DB::statement('PRAGMA synchronous = OFF');
+            DB::statement('PRAGMA temp_store = MEMORY');
+            DB::statement('PRAGMA cache_size = -64000');
+
+            try {
+                $callback();
+            } finally {
+                DB::statement('PRAGMA journal_mode = WAL');
+                DB::statement('PRAGMA synchronous = NORMAL');
+            }
 
             return;
         }
 
-        DB::statement('PRAGMA journal_mode = MEMORY');
-        DB::statement('PRAGMA synchronous = OFF');
-        DB::statement('PRAGMA temp_store = MEMORY');
-        DB::statement('PRAGMA cache_size = -64000');
-
-        try {
-            $callback();
-        } finally {
-            DB::statement('PRAGMA journal_mode = WAL');
-            DB::statement('PRAGMA synchronous = NORMAL');
+        if ($driver === 'mysql') {
+            DB::statement('SET SESSION wait_timeout = 28800');
+            DB::statement('SET SESSION net_read_timeout = 3600');
+            DB::statement('SET SESSION net_write_timeout = 3600');
         }
+
+        $callback();
+    }
+
+    private function chunkSize(): int
+    {
+        return DB::connection()->getDriverName() === 'mysql'
+            ? self::MYSQL_CHUNK
+            : self::CHUNK;
     }
 }
