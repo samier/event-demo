@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Mail\EventReminder;
 use App\Mail\RegistrationConfirmation;
-use App\Models\Attendee;
 use App\Models\Event;
+use App\Services\MailPreviewService;
 use Illuminate\Http\Response;
 
 /**
@@ -16,22 +16,17 @@ use Illuminate\Http\Response;
  */
 class MailPreviewController extends Controller
 {
+    public function __construct(private readonly MailPreviewService $previews) {}
+
     public function confirmation(Event $event): Response
     {
-        return response((new RegistrationConfirmation($event, $this->sampleAttendee($event)))->render());
+        return response((new RegistrationConfirmation($event, $this->previews->sampleAttendee($event)))->render());
     }
 
     public function reminder(Event $event, string $window): Response
     {
         $window = $window === '24-hour' ? '24-hour' : '3-day';
 
-        return response((new EventReminder($event, $this->sampleAttendee($event), $window))->render());
-    }
-
-    /** Use a real attendee if the event has one, otherwise a throwaway sample. */
-    private function sampleAttendee(Event $event): Attendee
-    {
-        return $event->attendees()->first()
-            ?? new Attendee(['name' => 'Ada Lovelace', 'email' => 'ada@example.com']);
+        return response((new EventReminder($event, $this->previews->sampleAttendee($event), $window))->render());
     }
 }
