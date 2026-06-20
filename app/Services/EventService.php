@@ -5,9 +5,10 @@ namespace App\Services;
 use App\Http\Resources\AttendeeResource;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
+use App\Models\CityAnchor;
 use App\Support\EventImages;
-use App\Support\Geocoder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -24,7 +25,7 @@ class EventService
     public function filterMeta(): array
     {
         return [
-            'cities' => Geocoder::filterOptions(),
+            'cities' => CityAnchor::filterOptions(),
             'categories' => EventImages::categories(),
         ];
     }
@@ -32,15 +33,30 @@ class EventService
     /**
      * Paginated, filtered event feed backing both visual pages.
      */
-    public function paginatedFeed(Request $request): LengthAwarePaginator
+    public function paginatedFeed(Request $request): LengthAwarePaginator|Paginator
     {
         $perPage = (int) min(48, max(6, (int) $request->input('per_page', 24)));
 
-        return $this->buildQuery($request)
+        $query = $this->buildQuery($request)
             ->withCount('attendees')
-            ->orderBy('created_time')
-            ->paginate($perPage)
-            ->withQueryString();
+            ->orderBy('created_time');
+
+        if ($this->usesSimplePagination($request)) {
+            return $query->simplePaginate($perPage)->withQueryString();
+        }
+
+        return $query->paginate($perPage)->withQueryString();
+    }
+
+    /**
+     * Skip the expensive COUNT(*) on filters that would scan large portions of
+     * the 1.25M-row table. The client uses links.next for infinite scroll.
+     */
+    private function usesSimplePagination(Request $request): bool
+    {
+        return $request->filled('city')
+            || $request->filled('country')
+            || $request->filled('q');
     }
 
     /**
@@ -75,8 +91,21 @@ class EventService
     {
         $now = time();
 
-        return Event::query()
-            ->whereIn('status', self::PUBLIC_STATUSES)
+        $query = Event::query()->whereIn('status', self::PUBLIC_STATUSES);
+
+        // Apply location predicates first so MySQL can use the location listing index.
+        if ($request->filled('city')) {
+            $box = CityAnchor::boundingBoxForCity((string) $request->input('city'));
+            if ($box !== null) {
+                [$minLat, $maxLat, $minLng, $maxLng] = $box;
+                $query->whereBetween('latitude', [$minLat, $maxLat])
+                    ->whereBetween('longitude', [$minLng, $maxLng]);
+            }
+        } elseif ($request->filled('country')) {
+            $query = $this->filterByCountry($query, (string) $request->input('country'));
+        }
+
+        return $query
             ->when($request->filled('from'), function (Builder $q) use ($request) {
                 $q->where('created_time', '>=', $request->date('from')->startOfDay()->getTimestamp());
             })
@@ -88,15 +117,6 @@ class EventService
                 fn (Builder $q) => $q->where('created_time', '>=', $now),
             )
             ->when($request->input('when') === 'past', fn (Builder $q) => $q->where('created_time', '<', $now))
-            ->when($request->filled('city'), function (Builder $q) use ($request) {
-                $box = Geocoder::boundingBoxForCity((string) $request->input('city'));
-                if ($box !== null) {
-                    [$minLat, $maxLat, $minLng, $maxLng] = $box;
-                    $q->whereBetween('latitude', [$minLat, $maxLat])
-                        ->whereBetween('longitude', [$minLng, $maxLng]);
-                }
-            })
-            ->when($request->filled('country'), fn (Builder $q) => $this->filterByCountry($q, (string) $request->input('country')))
             ->when($request->filled('type'), fn (Builder $q) => $q->where('type', $request->input('type')))
             ->when($request->filled('q'), fn (Builder $q) => $q->where('payload->name', 'like', '%'.$request->input('q').'%'));
     }
@@ -107,9 +127,9 @@ class EventService
      */
     private function filterByCountry(Builder $query, string $countryCode): Builder
     {
-        $boxes = collect(Geocoder::filterOptions())
+        $boxes = collect(CityAnchor::filterOptions())
             ->where('country_code', $countryCode)
-            ->map(fn (array $c) => Geocoder::boundingBoxForCity($c['city']))
+            ->map(fn (array $c) => CityAnchor::boundingBoxForCity($c['city']))
             ->filter()
             ->values();
 

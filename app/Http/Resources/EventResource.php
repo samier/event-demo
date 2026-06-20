@@ -2,9 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Models\CityAnchor;
 use App\Models\Event;
 use App\Support\EventImages;
-use App\Support\Geocoder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -23,7 +23,7 @@ class EventResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $address = Geocoder::resolve($this->latitude, $this->longitude);
+        $address = CityAnchor::resolveAddress($this->latitude, $this->longitude);
         $start = $this->startsAt();
         $end = $this->endsAt();
         $tz = $address['timezone'];

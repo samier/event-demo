@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Attendee;
 use App\Models\Event;
-use App\Support\Geocoder;
+use App\Models\CityAnchor;
 
 class DevEmailActivityService
 {
@@ -41,7 +41,7 @@ class DevEmailActivityService
             ->limit(50)
             ->get()
             ->map(function (Event $event) {
-                $address = Geocoder::resolve($event->latitude, $event->longitude);
+                $address = CityAnchor::resolveAddress($event->latitude, $event->longitude);
 
                 return [
                     'id' => $event->id,

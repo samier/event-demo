@@ -57,9 +57,14 @@ export interface CityOption {
 
 export interface FeedMeta {
     current_page: number;
-    last_page: number;
-    total: number;
+    last_page: number | null;
+    total: number | null;
     per_page: number;
+}
+
+export interface FeedLinks {
+    next: string | null;
+    prev: string | null;
 }
 
 export type WhenFilter = 'upcoming' | 'past' | 'all';

@@ -70,7 +70,7 @@ Eloquent: `Event::user()` / `Event::attendees()`, `Attendee::event()`.
 | --- | --- | --- |
 | Events with title/description/location/date | `events` table; title/description/venue/pricing live in `payload` (as seeded) | none — used as provided |
 | **Images** (2+ per event, local) | Resolved deterministically from `events.id` + `events.type` to a local file pool (`App\Support\EventImages`). No table — every event reuses the shared placeholder pool, so 2.5M+ image rows would add cost without changing behaviour. | **none, by design** (see [DECISIONS.md](../DECISIONS.md)) |
-| **Addresses** (lat/lng → readable) | Derived at read time by offline nearest-anchor reverse geocoding (`App\Support\Geocoder`). No table — it's a pure function of the coordinates. | none, by design |
+| **Addresses** (lat/lng → readable) | Nearest row in `city_anchors` (seeded via Nominatim at `db:seed` time). | `city_anchors` |
 | **Date/time + timezones** | `events.created_time` (unix UTC) + venue timezone derived from the resolved city. | none |
 | **Filtering** (date + location) | New indexes on `created_time` and `(latitude, longitude)`. | indexes added |
 | **Attendees / interest list** | New `attendees` table. | **table added** |

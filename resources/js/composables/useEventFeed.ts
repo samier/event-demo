@@ -2,6 +2,7 @@ import { reactive, ref } from 'vue';
 import type {
     EventFilters,
     EventResource,
+    FeedLinks,
     FeedMeta,
     WhenFilter,
 } from '@/types/events';
@@ -28,6 +29,7 @@ export function useEventFeed(
 
     const events = ref<EventResource[]>([]);
     const meta = ref<FeedMeta | null>(null);
+    const links = ref<FeedLinks | null>(null);
     const page = ref(0);
     const loading = ref(false);
     const loaded = ref(false);
@@ -69,7 +71,15 @@ export function useEventFeed(
             return;
         }
 
-        if (meta.value && page.value >= meta.value.last_page) {
+        if (meta.value?.last_page != null && page.value >= meta.value.last_page) {
+            return;
+        }
+
+        if (
+            meta.value?.last_page == null &&
+            links.value?.next == null &&
+            page.value > 0
+        ) {
             return;
         }
 
@@ -92,6 +102,7 @@ export function useEventFeed(
 
             events.value.push(...(payload.data as EventResource[]));
             meta.value = payload.meta as FeedMeta;
+            links.value = (payload.links as FeedLinks | undefined) ?? null;
             page.value = payload.meta.current_page;
             loaded.value = true;
         } finally {
@@ -104,6 +115,7 @@ export function useEventFeed(
     function applyFilters(): Promise<void> {
         events.value = [];
         meta.value = null;
+        links.value = null;
         page.value = 0;
         loaded.value = false;
 
@@ -121,7 +133,17 @@ export function useEventFeed(
         return applyFilters();
     }
 
-    const hasMore = () => !meta.value || page.value < meta.value.last_page;
+    const hasMore = () => {
+        if (!meta.value) {
+            return true;
+        }
+
+        if (meta.value.last_page != null) {
+            return page.value < meta.value.last_page;
+        }
+
+        return links.value?.next != null;
+    };
 
     return {
         filters,

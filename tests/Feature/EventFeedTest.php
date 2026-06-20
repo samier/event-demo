@@ -6,6 +6,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    seedCityAnchors();
+});
+
 function makeEvent(array $overrides = []): Event
 {
     return Event::factory()->for(User::factory())->create(array_merge([
