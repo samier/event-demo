@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Concert event cover">
+  <defs>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="90" />
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" />
+      <feColorMatrix type="saturate" values="0" />
+      <feComponentTransfer><feFuncA type="linear" slope="0.6" /></feComponentTransfer>
+    </filter>
+    <radialGradient id="glow" cx="50%" cy="8%" r="65%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.28" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="vignette" cx="50%" cy="42%" r="78%">
+      <stop offset="52%" stop-color="#000000" stop-opacity="0" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.6" />
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="800" fill="#1a0b2e" />
+  <g filter="url(#soft)"><circle cx="1000" cy="260" r="540" fill="#ec4899"/><circle cx="220" cy="560" r="500" fill="#f9a8d4"/><circle cx="640" cy="120" r="430" fill="#7c3aed"/></g>
+  <ellipse cx="600" cy="0" rx="1200" ry="360" fill="url(#glow)" />
+  <rect width="1200" height="800" filter="url(#grain)" opacity="0.1" />
+  <rect width="1200" height="800" fill="url(#vignette)" />
+
+  <g font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#ffffff">
+    <rect x="64" y="636" width="34" height="3" rx="1.5" fill="#ffffff" opacity="0.85" />
+    <text x="110" y="642" font-size="22" font-weight="600" letter-spacing="6" opacity="0.85">CONCERT</text>
+    <text x="64" y="704" font-size="56" font-weight="800" letter-spacing="-1">Live &amp; in person</text>
+  </g>
+</svg>

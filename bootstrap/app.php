@@ -24,7 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Render JSON errors for API routes and for any request that explicitly
+        // asks for JSON (e.g. the fetch-based event registration). Inertia form
+        // posts send `Accept: text/html`, so they still receive redirects.
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
     })->create();

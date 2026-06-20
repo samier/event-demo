@@ -18,6 +18,7 @@ declare module '@inertiajs/core' {
         sharedPageProps: {
             name: string;
             auth: Auth;
+            isLocal: boolean;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };
