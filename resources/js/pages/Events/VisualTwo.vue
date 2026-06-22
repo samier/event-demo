@@ -11,6 +11,7 @@ import {
 } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import EventImageCarousel from '@/components/events/EventImageCarousel.vue';
+import CitySearchSelect from '@/components/events/CitySearchSelect.vue';
 import RegisterInterestDialog from '@/components/events/RegisterInterestDialog.vue';
 import { Button } from '@/components/ui/button';
 import { useEventFeed } from '@/composables/useEventFeed';
@@ -165,7 +166,7 @@ onBeforeUnmount(() => observer?.disconnect());
 
         <!-- Filter panel -->
         <div
-            class="rounded-2xl border bg-card/60 p-4 shadow-sm backdrop-blur md:p-5"
+            class="relative z-20 rounded-2xl border bg-card/60 p-4 shadow-sm backdrop-blur md:p-5"
         >
                 <div class="grid gap-4 md:grid-cols-12">
                     <!-- Search -->
@@ -195,21 +196,14 @@ onBeforeUnmount(() => observer?.disconnect());
                             class="text-xs font-medium text-muted-foreground"
                             >Location</label
                         >
-                        <select
+                        <CitySearchSelect
                             id="agenda-city"
                             v-model="filters.city"
-                            class="h-10 rounded-xl border border-input bg-background px-3 text-sm focus:border-ring focus:ring-2 focus:ring-ring/30 focus:outline-none"
+                            :cities="cities"
+                            empty-label="Anywhere in the world"
+                            input-class="h-10 rounded-xl"
                             @change="applyFilters"
-                        >
-                            <option value="">Anywhere in the world</option>
-                            <option
-                                v-for="c in cities"
-                                :key="`${c.city}-${c.country_code}`"
-                                :value="c.city"
-                            >
-                                {{ c.city }}, {{ c.country }}
-                            </option>
-                        </select>
+                        />
                     </div>
 
                     <!-- When -->

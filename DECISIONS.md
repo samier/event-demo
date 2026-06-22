@@ -17,9 +17,9 @@ styles** — they shouldn't look like the same page twice.
 - **Gallery** (the first page) — a bright grid of cards, like browsing posters on a
   wall. Each card has a picture, the date, the place, the price, and a button to
   sign up. Good for discovering events visually.
-- **Agenda** (the second page) — a dark, calendar-style list where events are grouped
-  by day, with a big "next up" highlight at the top. Good for planning what's coming
-  in date order.
+- **Agenda** (the second page) — a day-by-day timeline where events are grouped by
+  date, with a featured "next up" event at the top. Good for planning what's coming in
+  date order.
 
 Both pages pull from the same source of event information, but they look and feel
 completely different.
@@ -50,14 +50,24 @@ set keeps things fast while still giving every event its own little gallery.
 latitude and longitude). Turn those numbers into a place name a person can actually
 read.
 
-**What I did:** I built a built-in list of 75 well-known cities around the world
-(their names, regions, countries, and time zones). For any event, I find the nearest
-city on that list and show something like *"Austin, Texas, United States"*.
+**What I did:** I use a **`city_anchors` table** in the database — 75 fixed city
+centres across the US, Canada, Mexico, Europe, and a few global hubs (the same set the
+original dataset was built around). When you seed the app:
 
-**Why:** the events were originally scattered around these same cities, so matching
-each one to its nearest city is accurate. It also means the app never has to call an
-outside service or the internet to look up an address — it's instant, free, and works
-the same every time.
+1. **`CityAnchorSeeder`** reads the coordinate list from
+   `database/data/city_anchor_coordinates.php`.
+2. For each point it calls **OpenStreetMap Nominatim** and **timeapi.io** once (via
+   `config/geocoder.php`) to fill in the city name, region, country, and timezone.
+3. Those rows are saved in **`city_anchors`**.
+
+When someone views an event, the app finds the **nearest anchor** to that event's
+coordinates and shows its stored address — for example *"Austin, Texas, United
+States"*. The location dropdown and city filter also read from this table.
+
+**Why:** events are seeded by jittering ±0.5° around these same anchors, so nearest-
+anchor matching is accurate. Geocoding happens **once at seed time**, not on every
+page load — browsing stays fast and free. At runtime there are no external API calls
+for addresses; only the seeder needs network access.
 
 ---
 
@@ -84,10 +94,14 @@ location**.
 
 - **Filter by date** — choose a "from" and "to" date, or use the quick
   Upcoming / Past / All buttons.
-- **Filter by location** — pick a city from a list.
+- **Filter by location** — pick a city from a **searchable** dropdown (type to find
+  a city or country).
 - Plus extras: search by name, and filter by event type (concert, workshop, etc.).
 
 By default you see **upcoming** events first, since that's what people usually want.
+
+Location filtering uses a bounding box around each anchor city in the database, with
+database indexes so it stays fast even on the full million-row dataset.
 
 ---
 
@@ -178,10 +192,10 @@ genuinely wanted, it's a small addition on top of this — just say the word and
 | Two different page styles | ✅ | Gallery page and Agenda page |
 | Title, description, location, date/time, image per event | ✅ | Any card or event page |
 | Two or more pictures per event, stored on our own site | ✅ | Picture carousel on cards and event pages |
-| Real place names from coordinates | ✅ | "Austin, Texas, United States" on every event |
+| Real place names from coordinates | ✅ | Nearest row in `city_anchors` on every event |
 | Sensible date/time across time zones | ✅ | Event page shows venue time **and** your time |
 | Filter by date | ✅ | Date pickers + Upcoming/Past/All on both pages |
-| Filter by location | ✅ | City picker on both pages |
+| Filter by location | ✅ | Searchable city picker on both pages |
 | Styled with Tailwind | ✅ | Everywhere |
 | Tasteful animations | ✅ | Hover, fade-in, success animations |
 | Register interest + attendee list | ✅ | Sign-up form + "Who's going" on each event |
@@ -197,18 +211,27 @@ genuinely wanted, it's a small addition on top of this — just say the word and
 
 The events come pre-loaded as a big, realistic set (over a million records). I built
 everything to work with it as-is and added a few behind-the-scenes speed improvements
-so filtering by date and location stays fast even at that size.
+so filtering by date and location stays fast even at that size:
+
+- **Database indexes** on `created_time`, `(status, created_time)`, and
+  `(latitude, longitude, …)` for feed queries.
+- **City anchors in the database** instead of a hard-coded PHP list — one source of
+  truth for seeding, filtering, and display.
+- **Lighter pagination** when city or text filters are active (avoids a slow full-table
+  count on every request).
 
 For day-to-day testing on a laptop, the project loads a smaller sample (a few thousand
-events) so it starts quickly — the code behaves identically either way.
+events) so it starts quickly — the code behaves identically either way. Run
+`CityAnchorSeeder` before `EventSeeder` (the default `db:seed` order does this
+automatically); anchor geocoding takes about 90 seconds on first seed.
 
 ---
 
 ## A picture of the database
 
 The file **[docs/ERD.md](docs/ERD.md)** contains a simple diagram of how the
-information is organised (events, the people who sign up, and the event organisers) and
-confirms that no required pieces are missing.
+information is organised (events, city anchors, the people who sign up, and the event
+organisers) and confirms that no required pieces are missing.
 
 ---
 

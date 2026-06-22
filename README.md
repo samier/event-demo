@@ -6,96 +6,118 @@ emails. Built on the provided Laravel starter kit.
 ## What this app does (in plain terms)
 
 - **Two ways to browse events:**
-  - **Gallery** — a colourful grid of event cards (`/events-visual-1`).
-  - **Agenda** — a dark, day-by-day timeline (`/events-visual-2`).
-- **Each event** shows a title, description, pictures, a real place name, and the
-  date/time (in both the event's local time and yours).
-- **Filter** events by date and by city (plus search and event type).
-- **Sign up** for an event — you get a confirmation email, appear on the event's
-  attendee list, and receive reminder emails 3 days and 24 hours before it starts.
+  - **Gallery** — a card grid (`/events-visual-1`).
+  - **Agenda** — a day-by-day timeline with a featured “next up” event (`/events-visual-2`).
+- **Each event** shows a title, description, pictures, a human-readable place name, and
+  the date/time in the event’s local timezone.
+- **Filter** events by date, city (searchable dropdown), event type, and free-text search.
+- **Sign up** for an event — you get a confirmation email, appear on the attendee list,
+  and receive reminder emails 3 days and 24 hours before it starts.
 - **Dashboard** — a quick overview of events and recent sign-ups.
 
-For the reasoning behind each choice, see **[DECISIONS.md](DECISIONS.md)** (written in
-plain language). For a diagram of how the data is organised, see
-**[docs/ERD.md](docs/ERD.md)**.
+For the reasoning behind each choice, see **[DECISIONS.md](DECISIONS.md)**. For a
+diagram of how the data is organised, see **[docs/ERD.md](docs/ERD.md)**.
+
+## City anchors (locations)
+
+Events only store raw latitude/longitude. Place names and timezones come from a
+**`city_anchors` table** — the database replacement for the old hard-coded city list.
+
+| Step | What happens |
+| --- | --- |
+| **Coordinates** | `database/data/city_anchor_coordinates.php` — 75 fixed lat/lng pairs (US, Canada, Mexico, Europe, global hubs) |
+| **Seed anchors** | `CityAnchorSeeder` geocodes each point via Nominatim + timeapi.io (`config/geocoder.php`) and saves to the table as it goes |
+| **Seed events** | `EventSeeder` picks a random anchor, jitters ±0.5°, and inserts the event |
+| **At runtime** | `CityAnchor::resolveAddress()` finds the nearest anchor — no external API calls |
+| **Dropdown / filters** | `CityAnchor::filterOptions()` and `boundingBoxForCity()` |
+
+Re-seed anchors only:
+
+```bash
+php artisan db:seed --class=CityAnchorSeeder
+```
 
 ## What you need
 
-- PHP 8.3+ with these extensions turned on: `pdo_sqlite`, `mbstring`, `intl`, `gd`,
-  `curl`, `openssl`, `fileinfo`.
+- PHP 8.3+ with: `pdo_sqlite` (or `pdo_mysql`), `mbstring`, `intl`, `gd`, `curl`,
+  `openssl`, `fileinfo`.
 - Node.js 20+ and npm.
+- Network access during **`db:seed`** (city anchor geocoding calls OpenStreetMap Nominatim
+  and timeapi.io).
 
 ## Setup
 
-Each line below has a short note explaining what it does.
-
 ```bash
-# 1. Install the project's building blocks
-composer install        # the back-end (PHP) parts
-npm install             # the front-end (browser) parts
+# 1. Install dependencies
+composer install
+npm install
 
-# 2. Create the settings file and a security key
+# 2. Environment
 cp .env.example .env
 php artisan key:generate
 
-# 3. Set up the database and fill it with sample events.
-#    SEED_ROWS limits how many sample events are created so it loads quickly.
-touch database/database.sqlite
+# 3. Database
+touch database/database.sqlite          # skip if using MySQL — configure DB_* in .env
 php artisan migrate
+
+# 4. Seed (CityAnchorSeeder runs first, then EventSeeder)
+#    Anchor geocoding: 75 points × ~1.1s delay (~90s). Progress prints per city.
+#    Use a smaller event count locally:
 SEED_ROWS=3000 php artisan db:seed
 
-# 4. (Optional) regenerate the placeholder event pictures
+# 5. (Optional) regenerate placeholder event images
 php artisan app:generate-event-images
 
-# 5. Prepare the browser files
+# 6. Front-end assets
 npm run build
 ```
 
-> On Windows, make sure your PHP program is on your system PATH before running
-> `npm run build` (the build step needs to call PHP).
+> **Windows:** ensure PHP is on your PATH before `npm run build` (Vite calls PHP during
+> the build).
+
+> **Full dataset:** omit `SEED_ROWS` to seed 1,250,000 events (~2.5 GB). Use
+> `SEED_ROWS=50000` (or similar) for day-to-day development.
+
+### Geocoder settings (seed only)
+
+Optional entries in `.env` — see `.env.example`:
+
+- `GEOCODER_USER_AGENT` — required by Nominatim policy
+- `GEOCODER_NOMINATIM_DELAY` — seconds between lookups (default `1.1`)
 
 ## Running it
 
 ```bash
-php artisan serve        # then open http://127.0.0.1:8000
+php artisan serve        # http://127.0.0.1:8000
 ```
 
-That's all you need to view the app. (If you're actively editing the look of the
-pages, you can also run `npm run dev` in a second window for instant updates — but it
-isn't required just to use the app.)
+- Gallery: `/events-visual-1`
+- Agenda: `/events-visual-2`
 
-Open `/events-visual-1` for the Gallery and `/events-visual-2` for the Agenda.
+For live front-end edits, run `npm run dev` in a second terminal (optional).
 
 ## Emails — and how to verify them
 
-By default the app **writes emails to a file** instead of sending them, so you can read
-every confirmation and reminder in `storage/logs/laravel.log` without setting up a real
-email account.
+By default the app **logs emails** to `storage/logs/laravel.log` instead of sending them.
 
-**Email activity & testing page** (easiest — local only): start the app and open
+**Email activity page** (local only):
 
 ```
 http://127.0.0.1:8000/dev/emails
 ```
 
-It's also linked from the **Dashboard**. The page shows, per event, how many
-confirmation and reminder emails have been sent (e.g. `5/5`), lets you **preview** the
-exact confirmation / 3-day / 24-hour emails in one click, and gives you copy-paste
-commands to trigger reminders.
+Also linked from the Dashboard — preview confirmations/reminders and see send counts.
 
-**Send / trigger reminders by hand.** The reminder command is safe to run repeatedly —
-it never sends the same reminder twice — and has options that make it easy to test:
+**Trigger reminders manually:**
 
 ```bash
-php artisan events:send-reminders                       # send anything currently due
-php artisan events:send-reminders --pretend             # preview who WOULD be emailed
-php artisan events:send-reminders --event=<EVENT_ID> --force   # send now for one event
-php artisan events:send-reminders --window=3-day        # only the 3-day window
+php artisan events:send-reminders
+php artisan events:send-reminders --pretend
+php artisan events:send-reminders --event=<EVENT_ID> --force
+php artisan events:send-reminders --window=3-day
 ```
 
-The command prints a table of every recipient and which reminder they got.
-
-In a real deployment, Laravel's scheduler runs the reminders automatically every hour:
+In production, the scheduler runs reminders hourly:
 
 ```bash
 php artisan schedule:work
@@ -104,21 +126,24 @@ php artisan schedule:work
 ## Checking the quality
 
 ```bash
-php artisan test            # automated tests (events, filtering, sign-ups, reminders)
-npm run lint:check          # checks the front-end code style
-npm run format:check        # checks formatting
-npm run types:check         # checks the front-end for type mistakes
+php artisan test
+npm run lint:check
+npm run format:check
+npm run types:check
 ```
 
 ## Where things live (for developers)
 
-| What it does | File(s) |
+| What | File(s) |
 | --- | --- |
-| Turn coordinates into a place name + time zone | `app/Support/Geocoder.php`, `app/Support/Cities.php` |
-| Pick local placeholder pictures for an event | `app/Console/Commands/GenerateEventImages.php`, `app/Support/EventImages.php` |
-| Shape event data for the screen | `app/Http/Resources/EventResource.php` |
-| List + filter events, and the event detail page | `app/Http/Controllers/EventController.php` |
-| Sign-ups + emails | `app/Http/Controllers/AttendeeController.php`, `app/Mail/*`, `resources/views/mail/*` |
-| Reminder emails | `app/Console/Commands/SendEventReminders.php`, `routes/console.php` |
-| The two browsing pages + event page | `resources/js/pages/Events/` |
-| Shared front-end pieces | `resources/js/composables/`, `resources/js/components/events/` |
+| City anchor coordinates (seed input) | `database/data/city_anchor_coordinates.php` |
+| Geocode anchors at seed time | `database/seeders/CityAnchorSeeder.php`, `app/Support/SeedGeocoder.php`, `config/geocoder.php` |
+| Anchor model (nearest, filters, bounding box) | `app/Models/CityAnchor.php` |
+| Resolve event lat/lng → address at runtime | `CityAnchor::resolveAddress()` via `app/Http/Resources/EventResource.php` |
+| Event feed + filters | `app/Services/EventService.php`, `app/Http/Controllers/EventController.php`, `GET /events/feed` |
+| Seed bulk events | `database/seeders/EventSeeder.php` |
+| Placeholder images | `app/Support/EventImages.php`, `app/Console/Commands/GenerateEventImages.php` |
+| Sign-ups + mail | `app/Http/Controllers/AttendeeController.php`, `app/Mail/*` |
+| Reminder emails | `app/Console/Commands/SendEventReminders.php` |
+| Gallery + Agenda UI | `resources/js/pages/Events/`, `resources/js/composables/useEventFeed.ts` |
+| Searchable city filter | `resources/js/components/events/CitySearchSelect.vue` |

@@ -4,7 +4,7 @@ namespace App\Mail;
 
 use App\Models\Attendee;
 use App\Models\Event;
-use App\Support\Geocoder;
+use App\Models\CityAnchor;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -29,7 +29,7 @@ class RegistrationConfirmation extends Mailable
 
     public function content(): Content
     {
-        $address = Geocoder::resolve($this->event->latitude, $this->event->longitude);
+        $address = CityAnchor::resolveAddress($this->event->latitude, $this->event->longitude);
 
         return new Content(
             markdown: 'mail.registration-confirmation',

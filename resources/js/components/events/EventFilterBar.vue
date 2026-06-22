@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Search, SlidersHorizontal, X } from '@lucide/vue';
 import { ref, watch } from 'vue';
+import CitySearchSelect from '@/components/events/CitySearchSelect.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { CityOption, EventFilters, WhenFilter } from '@/types/events';
@@ -47,7 +48,7 @@ function selectCategory(category: string) {
 </script>
 
 <template>
-    <div class="rounded-2xl border bg-card/60 p-4 shadow-sm backdrop-blur">
+    <div class="relative z-20 rounded-2xl border bg-card/60 p-4 shadow-sm backdrop-blur">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div class="relative flex-1">
                 <Search
@@ -102,20 +103,12 @@ function selectCategory(category: string) {
                     <label class="text-xs font-medium text-muted-foreground"
                         >Location</label
                     >
-                    <select
+                    <CitySearchSelect
                         v-model="filters.city"
-                        class="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        :cities="cities"
+                        empty-label="Anywhere"
                         @change="emit('change')"
-                    >
-                        <option value="">Anywhere</option>
-                        <option
-                            v-for="c in cities"
-                            :key="`${c.city}-${c.country_code}`"
-                            :value="c.city"
-                        >
-                            {{ c.city }}, {{ c.country }}
-                        </option>
-                    </select>
+                    />
                 </div>
 
                 <div class="flex flex-col gap-1.5">
